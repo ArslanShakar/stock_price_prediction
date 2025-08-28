@@ -18,11 +18,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Mount drive
-from google.colab import drive
-drive.mount('/content/drive')
+# from google.colab import drive
+# drive.mount('/content/drive')
 
 # Dataset directory path
-dataset_dir_path = "/content/drive/MyDrive/stock_dataset"
+# dataset_dir_path = "/content/drive/MyDrive/stock_dataset"
+dataset_dir_path = "../stock_dataset"
 
 # Load the CSV files into separate DataFrames
 aapl_df = pd.read_csv(os.path.join(dataset_dir_path, 'AAPL.csv'))
@@ -111,7 +112,7 @@ merged_df
 
 """### Extracting Technical Indicator (Features)"""
 
-!pip install ta
+# !pip install ta
 
 from ta.volatility import AverageTrueRange, BollingerBands
 from ta.trend import MACD, ADXIndicator
@@ -485,7 +486,7 @@ portfolio_overview_df['Final_Balance'] = portfolio_overview_df['Portfolio_Value'
 
 # Display
 print("Portfolio Overview per Day:")
-display(portfolio_overview_df)
+# display(portfolio_overview_df)
 
 """## Random Forest Model"""
 
@@ -689,4 +690,4 @@ portfolio_overview_df['Final_Balance'] = portfolio_overview_df['Portfolio_Value'
 
 # Display
 print("Portfolio Overview per Day:")
-display(portfolio_overview_df)
+# display(portfolio_overview_df)
