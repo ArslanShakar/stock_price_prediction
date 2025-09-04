@@ -63,7 +63,8 @@ plt.style.use('ggplot')
 def plot_close_price(df, stock_name, full_name):
   plt.figure(figsize=(12, 5))
   plt.plot(df['Date'], df['Close'], label='Close Price', color='blue')
-  plt.title(f"{full_name} (Ticker: {stock_name}) - Close Price Over Time", fontsize=14)
+  plt.title(f"{full_name} (Ticker: {stock_name}) - Close Price Over Time",
+            fontsize=14)
   plt.xlabel("Date")
   plt.ylabel("Close Price (USD)")
   plt.legend()
@@ -90,8 +91,13 @@ print("\n".join(f"{stock}: {count}" for stock, count in records_count.items()))
 
 # Plot as a bar chart
 plt.figure(figsize=(8, 5))
-plt.bar(records_count.keys(), records_count.values(),
+bars = plt.bar(records_count.keys(), records_count.values(),
         color=['green', 'blue', 'orange'])
+
+for bar, count in zip(bars, records_count.values()):
+  plt.text(x=bar.get_x() + bar.get_width() / 2, y=bar.get_height(),
+           s=count, ha='center', va='bottom')
+
 plt.title("Number of Records per Stock")
 plt.xlabel('Stock')
 plt.ylabel('Number of Records')
@@ -114,12 +120,11 @@ merged_df
 
 # !pip install ta
 
-from ta.volatility import AverageTrueRange, BollingerBands
-from ta.trend import MACD, ADXIndicator
+from ta.volatility import AverageTrueRange, BollingerBands, KeltnerChannel
+from ta.trend import ADXIndicator, CCIIndicator, EMAIndicator, MACD
 from ta.momentum import RSIIndicator, StochasticOscillator, ROCIndicator
-from ta.trend import EMAIndicator, CCIIndicator
-from ta.volume import OnBalanceVolumeIndicator, VolumePriceTrendIndicator, MFIIndicator
-from ta.volatility import KeltnerChannel
+from ta.volume import OnBalanceVolumeIndicator, MFIIndicator
+from ta.volume import VolumePriceTrendIndicator
 
 # Sort the data by date for each symbol
 df_sd = merged_df.sort_values(by=['Symbol', 'Date'])
@@ -164,7 +169,8 @@ df_sd['ROC'] = roc.reset_index(level=0, drop=True)
 df_sd = df_sd.dropna(subset=['RSI', 'MV20', 'MV50', 'MV200', 'MACD', 'ADX', 'AD'])
 
 # Compute Stochastic Oscillator
-df_sd['stoch'] = StochasticOscillator(high=df_sd['High'], low=df_sd['Low'], close=df_sd['Close'], window=14).stoch()
+df_sd['stoch'] = StochasticOscillator(high=df_sd['High'], low=df_sd['Low'],
+                                      close=df_sd['Close'], window=14).stoch()
 
 # Compute ROC (Rate of Change)
 df_sd['roc'] = ROCIndicator(close=df_sd['Close'], window=14).roc()
@@ -257,7 +263,7 @@ le = LabelEncoder()
 df_sd_filtered_cleaned['Symbol'] = le.fit_transform(df_sd_filtered_cleaned['Symbol'])
 
 # Save the encoder to a file
-joblib.dump(le, f'{dataset_dir_path}/label_encoder_symbol.pkl')
+joblib.dump(le, f'{dataset_dir_path}/label_encoder_symbol.pkl', compress=0)
 
 # Check the result
 print("Encoded Symbol classes:", dict(zip(le.classes_, le.transform(le.classes_))))
@@ -272,12 +278,12 @@ from sklearn.model_selection import train_test_split
 dates = df_sd_filtered_cleaned['Date']
 
 # Define features and target
-X = df_sd_filtered_cleaned.drop(columns=['Close', 'Date']) # All except 'Close'
+X = df_sd_filtered_cleaned.drop(columns=['Close', 'Date'])
 y = df_sd_filtered_cleaned['Close'] # Target is 'Close'
 
 # Split the dataset
 X_train, X_test, y_train, y_test, dates_train, dates_test = train_test_split(
-    X, y, dates, test_size=0.3, random_state=42, shuffle=True
+    X, y, dates, test_size=0.2, random_state=42, shuffle=True
 )
 
 # Confirm shapes
@@ -306,7 +312,7 @@ xgb = XGBRegressor(objective='reg:squarederror', random_state=42)
 # Grid Search with 5-fold cross-validation
 grid_search = GridSearchCV(estimator=xgb,
                            param_grid=param_grid,
-                           cv=6,
+                           cv=5,
                            scoring='neg_mean_squared_error',
                            verbose=1,
                            n_jobs=1)
@@ -487,6 +493,7 @@ portfolio_overview_df['Final_Balance'] = portfolio_overview_df['Portfolio_Value'
 # Display
 print("Portfolio Overview per Day:")
 # display(portfolio_overview_df)
+print(portfolio_overview_df)
 
 """## Random Forest Model"""
 
@@ -505,7 +512,7 @@ rf = RandomForestRegressor(random_state=42)
 grid_search_rf = GridSearchCV(
     estimator=rf,
     param_grid=param_grid_rf,
-    cv=6,
+    cv=5,
     scoring='neg_mean_squared_error',
     verbose=1,
     n_jobs=1
@@ -590,6 +597,7 @@ for bars in [xgb_bars, rf_bars]:
 plt.title("Evaluation Metrics Comparison - XGBoost vs Random")
 plt.xticks(x, metric_labels)
 plt.ylabel("Value")
+plt.legend()
 plt.grid(axis="y", linestyle="--", alpha=0.5)
 plt.tight_layout()
 plt.show()
@@ -691,3 +699,4 @@ portfolio_overview_df['Final_Balance'] = portfolio_overview_df['Portfolio_Value'
 # Display
 print("Portfolio Overview per Day:")
 # display(portfolio_overview_df)
+print(portfolio_overview_df)
